@@ -2,10 +2,9 @@ package dockertest
 
 import (
 	"database/sql"
+	"os/exec"
 	"strings"
 	"testing"
-
-	"os/exec"
 
 	_ "github.com/lib/pq"
 )

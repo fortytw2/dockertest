@@ -29,19 +29,25 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 	addr := fmt.Sprintf("localhost:%d", free)
 	cmd := exec.Command("docker", "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
 	// run this in the background
+
+	start := make(chan struct{})
 	go func() {
-		err := cmd.Run()
+		err := cmd.Start()
 		if err != nil {
 			fmt.Printf("could not run container, %s\n", err)
 		}
+		start <- struct{}{}
+		cmd.Wait()
 	}()
 
+	<-start
 	for {
 		err := waitFunc(addr)
 		if err == nil {
-			time.Sleep(time.Millisecond * 150)
 			break
 		}
+
+		time.Sleep(time.Millisecond * 150)
 	}
 
 	return &Container{
