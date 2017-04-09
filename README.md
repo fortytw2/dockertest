@@ -1,4 +1,4 @@
-# Dockertest
+# Dockertest [![Build Status](https://travis-ci.org/fortytw2/dockertest.svg?branch=master)](https://travis-ci.org/fortytw2/dockertest)
 
 `dockertest` allows you to quickly and easily test database interactions by
 creating and destroying databases within your tests using `docker`. 
