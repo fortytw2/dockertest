@@ -33,7 +33,7 @@ Postgres example copied from `github.com/fortytw2/hydrocarbon`
 
 ```go
 func TestDBBits(t *testing.T) {
-	container, err := testutil.RunContainer("postgres:alpine", "5432", func(addr string) error {
+	container, err := dockertest.RunContainer("postgres:alpine", "5432", func(addr string) error {
 		db, err := sql.Open("postgres", "postgres://postgres:postgres@"+addr+"?sslmode=disable")
 		if err != nil {
 			return err
