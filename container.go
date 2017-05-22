@@ -3,7 +3,9 @@ package dockertest
 import (
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -26,7 +28,8 @@ func (c *Container) Shutdown() {
 // container can be reached
 func RunContainer(container string, port string, waitFunc func(addr string) error) (*Container, error) {
 	free := freePort()
-	addr := fmt.Sprintf("localhost:%d", free)
+	host := getHost()
+	addr := fmt.Sprintf("%s:%d", host, free)
 	cmd := exec.Command("docker", "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
 	// run this in the background
 
@@ -55,6 +58,14 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 		Addr: addr,
 		cmd:  cmd,
 	}, nil
+}
+
+func getHost() string {
+	out, err := exec.Command("docker-machine", "ip", os.Getenv("DOCKER_MACHINE_NAME")).Output()
+	if err == nil {
+		return strings.TrimSpace(string(out[:]))
+	}
+	return "localhost"
 }
 
 func freePort() int {

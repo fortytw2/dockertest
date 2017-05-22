@@ -1,7 +1,7 @@
 # Dockertest [![Build Status](https://travis-ci.org/fortytw2/dockertest.svg?branch=master)](https://travis-ci.org/fortytw2/dockertest)
 
 `dockertest` allows you to quickly and easily test database interactions by
-creating and destroying databases within your tests using `docker`. 
+creating and destroying databases within your tests using `docker`.
 
 It works by controlling the docker daemon running locally with `exec.Command`.
 The flow is as follows ->
@@ -55,9 +55,13 @@ func TestDBBits(t *testing.T) {
 }
 ```
 
-It should be trivial to adapt the above bits to work just as well from a 
+It should be trivial to adapt the above bits to work just as well from a
 `TestMain` function, if you want to avoid running a new container for each
 individual test function - subtests also help here.
+
+### Docker-machine host
+
+Note that dockertest will give priority to the `DOCKER_MACHINE_NAME` when looking for your container address and will fallback to `localhost` if it fails to find it.
 
 # License
 
