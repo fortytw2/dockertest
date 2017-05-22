@@ -3,7 +3,9 @@ package dockertest
 import (
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
+	"regexp"
 	"syscall"
 	"time"
 )
@@ -26,7 +28,8 @@ func (c *Container) Shutdown() {
 // container can be reached
 func RunContainer(container string, port string, waitFunc func(addr string) error) (*Container, error) {
 	free := freePort()
-	addr := fmt.Sprintf("localhost:%d", free)
+	host := discoverHost()
+	addr := fmt.Sprintf("%s:%d", host, free)
 	cmd := exec.Command("docker", "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
 	// run this in the background
 
@@ -70,4 +73,11 @@ func freePort() int {
 	defer l.Close()
 
 	return l.Addr().(*net.TCPAddr).Port
+}
+
+func discoverHost() string {
+	if host := os.Getenv("DOCKER_HOST"); host != "" {
+		return regexp.MustCompile(`tcp://([\d\.]*):\d*`).FindStringSubmatch(host)[1]
+	}
+	return "localhost"
 }
