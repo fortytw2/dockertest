@@ -46,7 +46,7 @@ func TestDBBits(t *testing.T) {
 		t.Fatalf("could not start postgres, %s", err)
 	}
 
-	db, err := sql.Open("postgres://postgres:postgres@" + container.Addr + "?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@" + container.Addr + "?sslmode=disable")
 	if err != nil {
 		t.Fatal(err)
 	}
