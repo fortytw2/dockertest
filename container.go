@@ -13,6 +13,7 @@ import (
 // A Container is a container inside docker
 type Container struct {
 	Name string
+	Args []string
 	Addr string
 
 	cmd *exec.Cmd
@@ -21,16 +22,20 @@ type Container struct {
 // Shutdown ends the container
 func (c *Container) Shutdown() {
 	c.cmd.Process.Signal(syscall.SIGINT)
-	time.Sleep(250 * time.Millisecond)
+	// Check if the process is excited.  If it doesn't exit in a reasonable period of time, just continue
+	for i := 0; i < 200 && !(c.cmd == nil || c.cmd.ProcessState == nil || c.cmd.ProcessState.Exited()); i++ {
+		time.Sleep(5 * time.Millisecond)
+	}
 }
 
 // RunContainer runs a given docker container and returns a port on which the
 // container can be reached
-func RunContainer(container string, port string, waitFunc func(addr string) error) (*Container, error) {
+func RunContainer(container string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
 	free := freePort()
 	host := getHost()
 	addr := fmt.Sprintf("%s:%d", host, free)
-	cmd := exec.Command("docker", "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
+	argsFull := append(args, "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
+	cmd := exec.Command("docker", argsFull...)
 	// run this in the background
 
 	start := make(chan struct{})
@@ -56,6 +61,7 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 	return &Container{
 		Name: container,
 		Addr: addr,
+		Args: args,
 		cmd:  cmd,
 	}, nil
 }
