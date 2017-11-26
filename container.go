@@ -21,7 +21,7 @@ type Container struct {
 // Shutdown ends the container
 func (c *Container) Shutdown() {
 	c.cmd.Process.Signal(syscall.SIGINT)
-	// Check if the process is excited.  If it doesn't exit in a reasonable period of time, just continue
+	//  Wait till the process exits.
 	c.cmd.Wait()
 }
 
