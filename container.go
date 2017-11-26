@@ -13,37 +13,33 @@ import (
 // A Container is a container inside docker
 type Container struct {
 	Name string
+	Args []string
 	Addr string
-
-	cmd *exec.Cmd
+	cmd  *exec.Cmd
 }
 
 // Shutdown ends the container
 func (c *Container) Shutdown() {
 	c.cmd.Process.Signal(syscall.SIGINT)
-	time.Sleep(250 * time.Millisecond)
+	//  Wait till the process exits.
+	c.cmd.Wait()
 }
 
 // RunContainer runs a given docker container and returns a port on which the
 // container can be reached
-func RunContainer(container string, port string, waitFunc func(addr string) error) (*Container, error) {
+func RunContainer(container string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
 	free := freePort()
 	host := getHost()
 	addr := fmt.Sprintf("%s:%d", host, free)
-	cmd := exec.Command("docker", "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
+	argsFull := append([]string{"run"}, args...)
+	argsFull = append(argsFull, "-p", fmt.Sprintf("%d:%s", free, port), container)
+	cmd := exec.Command("docker", argsFull...)
 	// run this in the background
 
-	start := make(chan struct{})
-	go func() {
-		err := cmd.Start()
-		if err != nil {
-			fmt.Printf("could not run container, %s\n", err)
-		}
-		start <- struct{}{}
-		cmd.Wait()
-	}()
-
-	<-start
+	err := cmd.Start()
+	if err != nil {
+		return nil, fmt.Errorf("could not run container, %s", err)
+	}
 	for {
 		err := waitFunc(addr)
 		if err == nil {
@@ -56,6 +52,7 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 	return &Container{
 		Name: container,
 		Addr: addr,
+		Args: args,
 		cmd:  cmd,
 	}, nil
 }
