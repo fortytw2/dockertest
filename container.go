@@ -35,16 +35,10 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 	cmd := exec.Command("docker", argsFull...)
 	// run this in the background
 
-	start := make(chan struct{})
-	go func() {
-		err := cmd.Start()
-		if err != nil {
-			fmt.Printf("could not run container, %s\n", err)
-		}
-		start <- struct{}{}
-	}()
-
-	<-start
+	err := cmd.Start()
+	if err != nil {
+		return nil, fmt.Errorf("could not run container, %s", err)
+	}
 	for {
 		err := waitFunc(addr)
 		if err == nil {
