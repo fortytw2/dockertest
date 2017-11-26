@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -39,7 +38,6 @@ func TestRunContainer(t *testing.T) {
 	}
 
 	container.Shutdown()
-	time.Sleep(1 * time.Second) // takes a bit for the docker daemon to realize that the process has ended
 
 	buf, err = exec.Command("docker", "ps").CombinedOutput()
 	if err != nil {

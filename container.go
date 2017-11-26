@@ -15,17 +15,14 @@ type Container struct {
 	Name string
 	Args []string
 	Addr string
-
-	cmd *exec.Cmd
+	cmd  *exec.Cmd
 }
 
 // Shutdown ends the container
 func (c *Container) Shutdown() {
 	c.cmd.Process.Signal(syscall.SIGINT)
 	// Check if the process is excited.  If it doesn't exit in a reasonable period of time, just continue
-	for i := 0; i < 200 && !(c.cmd == nil || c.cmd.ProcessState == nil || c.cmd.ProcessState.Exited()); i++ {
-		time.Sleep(5 * time.Millisecond)
-	}
+	c.cmd.Wait()
 }
 
 // RunContainer runs a given docker container and returns a port on which the
@@ -45,7 +42,6 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 			fmt.Printf("could not run container, %s\n", err)
 		}
 		start <- struct{}{}
-		cmd.Wait()
 	}()
 
 	<-start
