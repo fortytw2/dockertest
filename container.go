@@ -31,7 +31,8 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 	free := freePort()
 	host := getHost()
 	addr := fmt.Sprintf("%s:%d", host, free)
-	argsFull := append(args, "run", "-p", fmt.Sprintf("%d:%s", free, port), container)
+	argsFull := append([]string{"run"}, args...)
+	argsFull = append(argsFull, "-p", fmt.Sprintf("%d:%s", free, port), container)
 	cmd := exec.Command("docker", argsFull...)
 	// run this in the background
 
