@@ -25,14 +25,14 @@ func (c *Container) Shutdown() {
 	c.cmd.Wait()
 }
 
-// RunContainer runs a given docker container and returns a port on which the
+// RunContainer runs a given docker image and returns a port on which the
 // container can be reached
-func RunContainer(container string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
+func RunContainer(name string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
 	free := freePort()
 	host := getHost()
 	addr := fmt.Sprintf("%s:%d", host, free)
 	argsFull := append([]string{"run"}, args...)
-	argsFull = append(argsFull, "-p", fmt.Sprintf("%d:%s", free, port), container)
+	argsFull = append(argsFull, "-p", fmt.Sprintf("%d:%s", free, port), name)
 	cmd := exec.Command("docker", argsFull...)
 	// run this in the background
 
@@ -41,20 +41,56 @@ func RunContainer(container string, port string, waitFunc func(addr string) erro
 		return nil, fmt.Errorf("could not run container, %s", err)
 	}
 	for {
-		err := waitFunc(addr)
-		if err == nil {
-			break
+		if err := waitFunc(addr); err != nil {
+			continue
 		}
-
 		time.Sleep(time.Millisecond * 150)
 	}
 
 	return &Container{
-		Name: container,
+		Name: name,
 		Addr: addr,
 		Args: args,
 		cmd:  cmd,
 	}, nil
+}
+
+// RunContainer runs a given docker image and returns a port on which the
+// container can be reached
+func RunContainerContext(ctx context.Context, name string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
+	free := freePort()
+	host := getHost()
+	addr := fmt.Sprintf("%s:%d", host, free)
+	argsFull := append([]string{"run"}, args...)
+	argsFull = append(argsFull, "-p", fmt.Sprintf("%d:%s", free, port), name)
+	cmd := exec.Command("docker", argsFull...)
+	// run this in the background
+
+	err := cmd.Start()
+	if err != nil {
+		return nil, fmt.Errorf("could not run container, %s", err)
+	}
+
+	result := &Container{
+		Name: name,
+		Addr: addr,
+		Args: args,
+		cmd:  cmd,
+	}, nil
+
+	for {
+		select {
+		case <-time.After(time.Millisecond * 150):
+			if err := waitFunc(addr); err != nil {
+				continue
+			}
+		case <-ctx.Done():
+			// we still need to Shutdown cmd
+			return result, ctx.Err()
+		}
+	}
+
+	return result, nil
 }
 
 func getHost() string {
