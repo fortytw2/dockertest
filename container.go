@@ -28,6 +28,15 @@ func (c *Container) Shutdown() {
 	}
 }
 
+// Shutdown ends the container
+func (c *Container) Terminate() {
+	if c != nil {
+		c.cmd.Process.Signal(syscall.SIGTERM)
+		//  Wait till the process exits.
+		c.cmd.Wait()
+	}
+}
+
 // RunContainer runs a given docker image and returns a port on which the
 // container can be reached
 func RunContainer(name string, port string, waitFunc func(addr string) error, args ...string) (*Container, error) {
@@ -87,14 +96,12 @@ func RunContainerContext(ctx context.Context, name string, port string, waitFunc
 			if err := waitFunc(addr); err != nil {
 				continue
 			}
-			break
+			return result, nil
 		case <-ctx.Done():
 			// we still need to Shutdown cmd
 			return result, ctx.Err()
 		}
 	}
-
-	return result, nil
 }
 
 func getHost() string {
