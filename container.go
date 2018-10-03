@@ -87,6 +87,7 @@ func RunContainerContext(ctx context.Context, name string, port string, waitFunc
 			if err := waitFunc(addr); err != nil {
 				continue
 			}
+			break
 		case <-ctx.Done():
 			// we still need to Shutdown cmd
 			return result, ctx.Err()
