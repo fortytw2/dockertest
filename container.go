@@ -1,6 +1,7 @@
 package dockertest
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -20,9 +21,11 @@ type Container struct {
 
 // Shutdown ends the container
 func (c *Container) Shutdown() {
-	c.cmd.Process.Signal(syscall.SIGINT)
-	//  Wait till the process exits.
-	c.cmd.Wait()
+	if c != nil {
+		c.cmd.Process.Signal(syscall.SIGINT)
+		//  Wait till the process exits.
+		c.cmd.Wait()
+	}
 }
 
 // RunContainer runs a given docker image and returns a port on which the
@@ -76,7 +79,7 @@ func RunContainerContext(ctx context.Context, name string, port string, waitFunc
 		Addr: addr,
 		Args: args,
 		cmd:  cmd,
-	}, nil
+	}
 
 	for {
 		select {
