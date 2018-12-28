@@ -11,10 +11,12 @@ var (
 	ErrWaitedTooLong = errors.New("dockertest: waited too long for container from pool")
 )
 
+// A ContainerPool wraps multiple containers to allow t.Parallel to work well
 type ContainerPool struct {
 	containers chan *Container
 }
 
+// NewContainerPool is exactly the same as RunContainer, but takes a number of containers to boot
 func NewContainerPool(num int, container string, port string, waitFunc func(addr string) error, args ...string) (*ContainerPool, error) {
 	containerBuffer := make(chan *Container, num)
 	for i := 0; i < num; i++ {
