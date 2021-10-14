@@ -32,7 +32,7 @@ func TestRunContainer(t *testing.T) {
 			return err
 		}
 		return db.Ping()
-	})
+	}, "-e", "POSTGRES_PASSWORD=postgres")
 
 	if err != nil {
 		t.Fatalf("could not start postgres, %s", err)
